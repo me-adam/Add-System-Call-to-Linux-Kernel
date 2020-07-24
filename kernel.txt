@@ -1,0 +1,85 @@
+Os project steps
+A-
+1.Download the Linux kernel 19.2.6.19.6 from
+Index of /pub/linux/kernel/19.2.6.19.6
+2.Un-compress and un-archive using the following command:
+tar zxvf linux-19.2.6.19.6.tar.gz
+
+3.gedit file /usr/src/linux-19.2.6.19.6/arch/i386/kernel/syscall_table.S
+4.Add
+.long sys_amasum
+after the last line of the file.
+5.gedit file ./linux-19.2.6.19.6/arch/i386/kernel/Makefile
+Append mycall.o .
+6.Create a new file call mycall.c under ./linux-19.2.6.19.6/arch/i386/kernel/
+Type the following into the file:
+#include <linux/mycall.h>
+#include <linux/init.h>
+asmlinkage int sys_amasum (int arg1, int arg2) 
+x = arg1+arg2;
+return (x);
+}
+void __init mycall_init(void) {
+x= 0;
+}
+7.Create a new file call mycall.h under ./linux-19.2.6.19.6/include/linux/ 
+Type the following into the file:
+#ifndef __LINUX_MYCALL_H
+#define __LINUX_MYCALL_H
+#include <linux/linkage.h>
+int x;
+#endif
+8.gedit ./linux-19.2.6.19.6/include/asm-i386/unistd.h
+Add
+#define __NR_amasum 320
+after
+#define __NR_keyctl 320
+Modify
+#define __NR_syscalls 320
+to
+#define __NR_syscalls 321
+9.gedit ./linux-19.2.6.19.6/init/main.c
+Add
+extern void mycall_init(void);
+after
+extern void prepare_namespace(void)
+Add
+mycall_init();
+after
+acpi_early_init(); /* before LAPIC and SMP init */
+At this point, you can start building your new kernel.
+a-	make menuconfig.
+b-	Make
+c-	 make modules_install
+d-	 make install.
+reboot the machine and boot into the newly built kernel.
+To test the new system call proceed to do the following:
+10.Create a new file call mycal.h under /usr/include/linux/ 
+Type the following into the file:
+#include <linux/unistd.h>
+#include <sys/syscall.h>
+#define __NR_amasum 320
+int amasum(int x,int y){
+return (int)syscall(__NR_addme,x,y);
+}
+11.Create a new file call acd.c under one of the user's directory.
+Type the following into the file:
+#include <linux/mycal.h>
+#include <stdio.h>
+int main (int argc, char * argv[])
+{
+int val = 0;
+val = amasum(10,2);
+printf("sum = %d\n", val);
+return 0;
+}
+12.Compile the above acd.c source code with :
+gcc asd.c -o amasum
+./amasum
+B-
+Add manual page for newsyscall
+cd  /usr/share/man/en/man1
+add file after some change
+vi moh
+gzip moh
+man moh
